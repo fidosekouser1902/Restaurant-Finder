@@ -1,0 +1,160 @@
+{
+  "$comment": "Regenerate from code: python -m recommender.export_schema",
+  "schema_version": "1.0.0",
+  "source_dataset": {
+    "huggingface_id": "ManikaSaini/zomato-restaurant-recommendation",
+    "split": "train"
+  },
+  "column_mapping": [
+    {
+      "hf_column": "address",
+      "canonical_use": "raw_fields — full address"
+    },
+    {
+      "hf_column": "approx_cost(for two people)",
+      "canonical_use": "RestaurantRecord.cost_for_two + cost_tier"
+    },
+    {
+      "hf_column": "book_table",
+      "canonical_use": "raw_fields"
+    },
+    {
+      "hf_column": "cuisines",
+      "canonical_use": "RestaurantRecord.cuisines — split list, lowercased"
+    },
+    {
+      "hf_column": "dish_liked",
+      "canonical_use": "raw_fields"
+    },
+    {
+      "hf_column": "listed_in(city)",
+      "canonical_use": "RestaurantRecord.city — normalized metro / zone for filtering"
+    },
+    {
+      "hf_column": "listed_in(type)",
+      "canonical_use": "raw_fields — Buffet, Delivery, …"
+    },
+    {
+      "hf_column": "location",
+      "canonical_use": "RestaurantRecord.neighborhood (area within city)"
+    },
+    {
+      "hf_column": "menu_item",
+      "canonical_use": "raw_fields"
+    },
+    {
+      "hf_column": "name",
+      "canonical_use": "RestaurantRecord.name (title-cased)"
+    },
+    {
+      "hf_column": "online_order",
+      "canonical_use": "raw_fields"
+    },
+    {
+      "hf_column": "phone",
+      "canonical_use": "raw_fields"
+    },
+    {
+      "hf_column": "rate",
+      "canonical_use": "RestaurantRecord.rating — parsed from strings like 4.1/5"
+    },
+    {
+      "hf_column": "rest_type",
+      "canonical_use": "raw_fields — Casual Dining, etc."
+    },
+    {
+      "hf_column": "reviews_list",
+      "canonical_use": "raw_fields — long text"
+    },
+    {
+      "hf_column": "url",
+      "canonical_use": "raw_fields only — listing URL"
+    },
+    {
+      "hf_column": "votes",
+      "canonical_use": "RestaurantRecord.votes"
+    }
+  ],
+  "json_schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "RestaurantRecord",
+    "description": "Normalized restaurant row after Phase 1 ingestion.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "name",
+      "city",
+      "neighborhood",
+      "cuisines",
+      "rating",
+      "cost_for_two",
+      "cost_tier",
+      "votes",
+      "raw_fields"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "16-char hex prefix of SHA-256(name|city|neighborhood|sorted cuisines)."
+      },
+      "name": {
+        "type": "string",
+        "description": "Trimmed, title-cased from HF name."
+      },
+      "city": {
+        "type": "string",
+        "description": "From listed_in(city); normalized via city aliases (e.g. Bengaluru→Bangalore)."
+      },
+      "neighborhood": {
+        "type": "string",
+        "description": "From location."
+      },
+      "cuisines": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Comma-split HF cuisines; deduped; lowercased tokens."
+      },
+      "rating": {
+        "type": [
+          "number",
+          "null"
+        ],
+        "description": "Parsed from rate (e.g. 4.1/5); null if missing/unparseable."
+      },
+      "cost_for_two": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "description": "INR digits from approx_cost(for two people); null if missing."
+      },
+      "cost_tier": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "description": "Derived from cost_for_two vs DatasetConfig thresholds; MEDIUM if cost unknown."
+      },
+      "votes": {
+        "type": [
+          "integer",
+          "null"
+        ],
+        "description": "From HF votes when integer-parseable."
+      },
+      "raw_fields": {
+        "type": "object",
+        "additionalProperties": true,
+        "description": "Subset of HF columns (url, address, rest_type, …); values may be string or other."
+      }
+    }
+  },
+  "validation_rules": {
+    "has_required_fields": "Truthy normalized name AND city (Phase 1 minimum bar)."
+  }
+}

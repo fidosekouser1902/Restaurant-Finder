@@ -1,0 +1,19 @@
+# Local Hugging Face + app caches (keep data in-repo but out of git)
+.cache/
+
+# Secrets (e.g. Groq API key for Phase 3 — see docs/phase-wise-architecture.md)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/

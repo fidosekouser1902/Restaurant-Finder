@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Restaurant recommender</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --border: #2d3a4d;
+      --text: #e8eef7;
+      --muted: #8b9cb3;
+      --accent: #5b9fd4;
+      --accent-dim: #3d7aaf;
+      --warn: #e8b84a;
+      --danger: #e07070;
+      --chip: #243044;
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(ellipse 120% 80% at 50% -20%, #1e3a5f 0%, var(--bg) 55%);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .wrap {
+      max-width: 52rem;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+    header { margin-bottom: 2rem; }
+    h1 {
+      font-size: 1.65rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.35rem;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.35rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .row { margin-bottom: 1rem; }
+    .row:last-child { margin-bottom: 0; }
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.55rem 0.65rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+    }
+    textarea { min-height: 4.5rem; resize: vertical; }
+    select { cursor: pointer; }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-top: 1.25rem;
+    }
+    button[type="submit"] {
+      background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dim) 100%);
+      color: #fff;
+      border: none;
+      padding: 0.65rem 1.35rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button[type="submit"]:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    button[type="submit"]:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .hint { font-size: 0.85rem; color: var(--muted); }
+    .banner {
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .banner.visible { display: block; }
+    .banner.error {
+      background: rgba(224, 112, 112, 0.12);
+      border: 1px solid rgba(224, 112, 112, 0.35);
+      color: #f5b4b4;
+    }
+    .banner.info {
+      background: rgba(91, 159, 212, 0.12);
+      border: 1px solid rgba(91, 159, 212, 0.35);
+      color: #b8d9f5;
+    }
+    .meta-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .badge.fallback { background: rgba(232, 184, 74, 0.2); color: var(--warn); }
+    .badge.live { background: rgba(80, 180, 120, 0.2); color: #7dcea0; }
+    .summary {
+      font-size: 1.05rem;
+      margin-bottom: 1.25rem;
+      color: var(--text);
+    }
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.15rem 1.25rem;
+      border-left: 4px solid var(--accent);
+    }
+    .card h2 {
+      margin: 0 0 0.35rem;
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+    .card .loc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.65rem;
+    }
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+    .stats strong { color: var(--text); }
+    .chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.75rem; }
+    .chip {
+      background: var(--chip);
+      color: var(--muted);
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+    }
+    .explain {
+      font-size: 0.95rem;
+      color: #c5d4e6;
+      margin: 0;
+    }
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 2rem 1rem;
+    }
+    footer {
+      margin-top: 2.5rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Restaurant recommender</h1>
+      <p class="sub" id="healthLine">Checking dataset…</p>
+    </header>
+
+    <div id="errBanner" class="banner error" role="alert"></div>
+    <div id="infoBanner" class="banner info"></div>
+
+    <form class="panel" id="prefsForm" aria-label="Search preferences">
+      <div class="row">
+        <label for="location">Locality</label>
+        <select id="location" name="location" aria-describedby="locationHint">
+          <option value="">Any locality</option>
+        </select>
+        <p class="hint" id="locationHint">Distinct areas from the dataset (neighborhood / locality). More rows in corpus → more options.</p>
+      </div>
+      <div class="row">
+        <label for="budget_inr">Max budget (₹ for two)</label>
+        <input type="number" id="budget_inr" name="budget_inr" min="1" max="1000000" step="1" value="1000" required />
+        <p class="hint">Only venues with known cost ≤ this amount are kept (unless filters relax).</p>
+      </div>
+      <div class="row">
+        <label for="cuisines">Cuisines <span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400">(optional)</span></label>
+        <input type="text" id="cuisines" name="cuisines" placeholder="Leave blank for any cuisine, or e.g. Italian, Chinese" autocomplete="off" />
+        <p class="hint">Substring match on normalized cuisine tags.</p>
+      </div>
+      <div class="row">
+        <label for="min_rating">Minimum rating</label>
+        <input type="number" id="min_rating" name="min_rating" min="0" max="5" step="0.1" value="3.5" required />
+      </div>
+      <div class="row">
+        <label for="top_k">How many recommendations</label>
+        <select id="top_k" name="top_k" aria-describedby="topKHint">
+          <option value="3">3</option>
+          <option value="5">5</option>
+          <option value="8">8</option>
+          <option value="10" selected>10</option>
+          <option value="12">12</option>
+        </select>
+        <p class="hint" id="topKHint">Sent as <code>top_k</code> to the API (1–12).</p>
+      </div>
+      <div class="row">
+        <label for="extras">Extras (optional)</label>
+        <textarea id="extras" name="extras" placeholder="e.g. family-friendly, outdoor seating, quick service"></textarea>
+      </div>
+      <div class="actions">
+        <button type="submit" id="submitBtn">Get recommendations</button>
+        <span class="hint" id="loadingHint" hidden>Calling API…</span>
+      </div>
+    </form>
+
+    <section class="panel" id="resultsSection" aria-live="polite">
+      <p class="empty" id="placeholder">Submit the form to see AI-ranked picks from your filters.</p>
+      <div id="resultsBody" hidden></div>
+    </section>
+
+    <footer>
+      <a href="/docs">OpenAPI docs</a> · <a href="/health">Health</a> · <a href="/api/v1/localities">Localities JSON</a>
+    </footer>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function showError(msg) {
+      const el = $("errBanner");
+      el.textContent = msg || "";
+      el.classList.toggle("visible", !!msg);
+    }
+
+    function showInfo(msg) {
+      const el = $("infoBanner");
+      el.textContent = msg || "";
+      el.classList.toggle("visible", !!msg);
+    }
+
+    function parseCuisines(raw) {
+      if (!raw || !String(raw).trim()) return [];
+      return String(raw)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+    function formatCost(n) {
+      if (n == null || n === "") return "—";
+      return "₹" + Number(n).toLocaleString("en-IN") + " for two";
+    }
+
+    function formatRating(r) {
+      if (r == null) return "—";
+      return "★ " + Number(r).toFixed(1);
+    }
+
+    function formatApiError(data, fallback) {
+      if (!data || data.detail == null) return fallback;
+      const d = data.detail;
+      if (typeof d === "string") return d;
+      if (Array.isArray(d))
+        return d.map((x) => (x.msg ? x.loc && x.loc.length ? x.loc.join(".") + ": " + x.msg : x.msg : JSON.stringify(x))).join("; ");
+      return JSON.stringify(d);
+    }
+
+    async function loadHealth() {
+      try {
+        const res = await fetch("/health");
+        if (!res.ok) throw new Error("health failed");
+        const data = await res.json();
+        $("healthLine").textContent =
+          "Dataset ready — " + data.corpus_size.toLocaleString() + " restaurants loaded.";
+      } catch {
+        $("healthLine").textContent = "Could not reach /health — is the API running?";
+      }
+    }
+
+    async function loadLocalities() {
+      const sel = $("location");
+      try {
+        const res = await fetch("/api/v1/localities");
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = data.localities || [];
+        for (const name of list) {
+          const opt = document.createElement("option");
+          opt.value = name;
+          opt.textContent = name;
+          sel.appendChild(opt);
+        }
+      } catch {
+        /* keep Any locality only */
+      }
+    }
+
+    function renderResults(data) {
+      $("placeholder").hidden = true;
+      const body = $("resultsBody");
+      body.hidden = false;
+      body.innerHTML = "";
+
+      const strip = document.createElement("div");
+      strip.className = "meta-strip";
+      const fb = document.createElement("span");
+      fb.className = "badge " + (data.fallback_used ? "fallback" : "live");
+      fb.textContent = data.fallback_used ? "Deterministic fallback" : "LLM ranking";
+      strip.appendChild(fb);
+      if (data.model_id) {
+        const m = document.createElement("span");
+        m.textContent = "Model: " + data.model_id;
+        strip.appendChild(m);
+      }
+      if (data.relaxations_applied && data.relaxations_applied.length) {
+        const r = document.createElement("span");
+        r.textContent = "Relaxations: " + data.relaxations_applied.join(", ");
+        strip.appendChild(r);
+      }
+      if (data.filter_funnel) {
+        const f = document.createElement("span");
+        f.textContent =
+          "After filters (loc → cuisine → budget → rating): " +
+          [
+            data.filter_funnel.total_after_location,
+            data.filter_funnel.total_after_cuisine,
+            data.filter_funnel.total_after_budget,
+            data.filter_funnel.total_after_rating,
+          ].join(" → ");
+        strip.appendChild(f);
+      }
+      body.appendChild(strip);
+
+      if (data.summary) {
+        const s = document.createElement("p");
+        s.className = "summary";
+        s.textContent = data.summary;
+        body.appendChild(s);
+      }
+
+      if (!data.recommendations || !data.recommendations.length) {
+        const p = document.createElement("p");
+        p.className = "empty";
+        p.textContent =
+          "No restaurants returned. Try a higher max budget (₹), lowering minimum rating, choosing Any locality, or leaving cuisines blank.";
+        body.appendChild(p);
+        return;
+      }
+
+      const cards = document.createElement("div");
+      cards.className = "cards";
+      for (const item of data.recommendations) {
+        const card = document.createElement("article");
+        card.className = "card";
+        card.innerHTML =
+          "<h2><span aria-hidden='true'>#" +
+          item.rank +
+          "</span> " +
+          escapeHtml(item.name) +
+          "</h2>";
+        const loc = document.createElement("p");
+        loc.className = "loc";
+        loc.textContent = [item.neighborhood, item.city].filter(Boolean).join(" · ");
+        card.appendChild(loc);
+
+        const stats = document.createElement("div");
+        stats.className = "stats";
+        stats.innerHTML =
+          "<span><strong>Rating</strong> " +
+          formatRating(item.rating) +
+          "</span>" +
+          "<span><strong>Cost</strong> " +
+          formatCost(item.cost_for_two) +
+          " (" +
+          escapeHtml(item.cost_tier) +
+          ")</span>";
+        card.appendChild(stats);
+
+        if (item.cuisines && item.cuisines.length) {
+          const chips = document.createElement("div");
+          chips.className = "chips";
+          for (const c of item.cuisines) {
+            const span = document.createElement("span");
+            span.className = "chip";
+            span.textContent = c;
+            chips.appendChild(span);
+          }
+          card.appendChild(chips);
+        }
+
+        const expl = document.createElement("p");
+        expl.className = "explain";
+        expl.textContent = item.explanation || "";
+        card.appendChild(expl);
+
+        cards.appendChild(card);
+      }
+      body.appendChild(cards);
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement("div");
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    $("prefsForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      showError("");
+      showInfo("");
+      const btn = $("submitBtn");
+      const hint = $("loadingHint");
+      btn.disabled = true;
+      hint.hidden = false;
+
+      const budgetRaw = parseInt($("budget_inr").value, 10);
+      if (!Number.isFinite(budgetRaw) || budgetRaw < 1) {
+        showError("Enter a valid max budget (₹ for two), at least 1.");
+        btn.disabled = false;
+        hint.hidden = true;
+        return;
+      }
+
+      const topKRaw = parseInt($("top_k").value, 10);
+      const top_k = Number.isFinite(topKRaw) ? Math.min(12, Math.max(1, topKRaw)) : 10;
+
+      const payload = {
+        location: $("location").value.trim() || null,
+        budget_for_two_inr: budgetRaw,
+        cuisines: parseCuisines($("cuisines").value),
+        min_rating: parseFloat($("min_rating").value),
+        extras: $("extras").value.trim(),
+        top_k,
+      };
+
+      try {
+        const res = await fetch("/api/v1/recommend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const text = await res.text();
+        let data = null;
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch {
+          data = null;
+        }
+        if (!res.ok) {
+          const detail = formatApiError(data, text || res.statusText);
+          showError(detail || "Request failed (" + res.status + ")");
+          $("placeholder").hidden = false;
+          $("resultsBody").hidden = true;
+          return;
+        }
+        if (data.truncated) {
+          showInfo("Candidate list was truncated to the configured max sent to the LLM.");
+        }
+        renderResults(data);
+      } catch (err) {
+        showError(err && err.message ? err.message : "Network error");
+        $("placeholder").hidden = false;
+        $("resultsBody").hidden = true;
+      } finally {
+        btn.disabled = false;
+        hint.hidden = true;
+      }
+    });
+
+    loadHealth();
+    loadLocalities();
+  </script>
+</body>
+</html>
