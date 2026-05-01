@@ -1,4 +1,4 @@
-# Recommender
+# Restaurant-Finder
 
 Phase 1 loads and normalizes the [Zomato restaurant dataset](https://huggingface.co/datasets/ManikaSaini/zomato-restaurant-recommendation) from Hugging Face into canonical `RestaurantRecord` rows.
 
