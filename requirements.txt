@@ -1,0 +1,4 @@
+# Streamlit Community Cloud (and local: pip install -r requirements.txt)
+streamlit>=1.30.0
+pydantic>=2.5.0
+-e .
